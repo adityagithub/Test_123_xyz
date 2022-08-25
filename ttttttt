@@ -1,0 +1,34 @@
+@Injectable({
+  providedIn: 'root'
+})
+export class InitialDataResolver implements Resolve<InitialData> {
+  constructor(
+    private _authService: AuthService,
+    private _eventService: EventService,
+    private _userService: UserService,
+    private _messageService: SnackbarMessageService,
+    private _signalRService: SignalrService
+  ) {
+  }
+
+  resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<any> {
+    const eventId = parseInt(route.paramMap.get('id'), 10);
+    const observable = this._signalRService._init();
+    return observable.pipe(switchMap((r) => {
+      return forkJoin([
+        this._signalRService.joinEvent({ eventId }),
+        this._userService.getUserDetail(),
+        this._eventService.getEvent(eventId)
+      ]).pipe(map(([res, user, event]) => ({
+        res,
+        user,
+        event
+      })))
+    }), catchError(error => this.handleError(error)))
+  }
+
+  private handleError(response: any): Observable<any> {
+    this._messageService.showErrorMessage('Sorry! An error occurred while connecting the web socket.')
+    return of(response)
+  }
+}
