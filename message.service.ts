@@ -55,3 +55,34 @@ export class MessageService {
     return audio
   }
 }
+
+.success-message {
+  background-color: #4caf50 !important;
+  color: #fff !important;
+  .mat-button-wrapper {
+    color: #fff !important;
+  }
+}
+.error-message {
+  background-color: #f44336 !important;
+  color: #fff !important;
+
+  .mat-button-wrapper {
+    color: #fff !important;
+  }
+}
+.default-message {
+  background-color: #2196f3 !important;
+  color: #fff !important;
+  .mat-button-wrapper {
+    color: #fff !important;
+  }
+}
+.info-message {
+  background-color: #2196f3 !important;
+  color: #fff !important;
+  .mat-button-wrapper {
+    color: #fff !important;
+  }
+}
+
