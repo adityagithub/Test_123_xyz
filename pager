@@ -53,3 +53,25 @@ export class PagerService {
     };
   }
 }
+
+
+setPage(page: number): void {
+    this.pager = this._pagerService.getPager(this.booths.length, page, 1);
+    this.pagedItems = this.booths.slice(this.pager.startIndex, this.pager.endIndex + 1);
+  }
+
+
+
+
+ <ng-container *ngIf="pager.pages && pager.pages.length">
+                    <a [ngClass]="{disabled:pager.currentPage === 1}" (click)="setPage(pager.currentPage - 1)"><span
+                            class="material-icons">keyboard_arrow_left</span></a>
+                    <a (click)="setPage(page)" *ngFor="let page of pager.pages"
+                        [ngClass]="{'primary':pager.currentPage === page}">
+                        {{page}}
+                    </a>
+                    <a [ngClass]="{disabled:pager.currentPage === pager.totalPages}"
+                        (click)="setPage(pager.currentPage + 1)">
+                        <span class="material-icons">keyboard_arrow_right</span>
+                    </a>
+                </ng-container>
