@@ -1,34 +1,157 @@
-@Injectable({
-  providedIn: 'root'
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  QueryList,
+  ViewChildren,
+  NgZone
+} from '@angular/core';
+
+@Component({
+  selector: 'app-timeline',
+  templateUrl: './timeline.component.html',
 })
-export class InitialDataResolver implements Resolve<InitialData> {
-  constructor(
-    private _authService: AuthService,
-    private _eventService: EventService,
-    private _userService: UserService,
-    private _messageService: SnackbarMessageService,
-    private _signalRService: SignalrService
-  ) {
+export class TimelineComponent implements AfterViewInit, OnDestroy {
+  months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  swimlanes: any[] = [ /* your data */ ];
+
+  // paddings / fallbacks
+  lanePad = 8;                // bottom padding we add for breathing room
+  defaultLaneHeight = 80;     // min height fallback
+  minLaneHeight = 48;         // safety minimum
+
+  laneHeights: number[] = [];
+
+  @ViewChildren('epicRow', { read: ElementRef }) epicRows!: QueryList<ElementRef>;
+
+  private ro?: ResizeObserver;
+  private running = false;
+
+  constructor(private zone: NgZone) {}
+
+  ngAfterViewInit(): void {
+    // initial calculate (defer to next macrotask so DOM is painted)
+    setTimeout(() => this.calculateLaneHeights());
+
+    // if rows change (e.g. data changes), recalc
+    this.epicRows.changes.subscribe(() => {
+      setTimeout(() => {
+        this.attachResizeObserver(); // attach observers to new nodes
+        this.calculateLaneHeights();
+      }, 0);
+    });
+
+    // attach observers initially
+    this.attachResizeObserver();
+
+    // window resize -> recompute
+    window.addEventListener('resize', this.onWindowResize);
   }
 
-  resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<any> {
-    const eventId = parseInt(route.paramMap.get('id'), 10);
-    const observable = this._signalRService._init();
-    return observable.pipe(switchMap((r) => {
-      return forkJoin([
-        this._signalRService.joinEvent({ eventId }),
-        this._userService.getUserDetail(),
-        this._eventService.getEvent(eventId)
-      ]).pipe(map(([res, user, event]) => ({
-        res,
-        user,
-        event
-      })))
-    }), catchError(error => this.handleError(error)))
+  ngOnDestroy(): void {
+    window.removeEventListener('resize', this.onWindowResize);
+    if (this.ro) this.ro.disconnect();
   }
 
-  private handleError(response: any): Observable<any> {
-    this._messageService.showErrorMessage('Sorry! An error occurred while connecting the web socket.')
-    return of(response)
+  private onWindowResize = () => {
+    this.calculateLaneHeights();
+  };
+
+  private attachResizeObserver() {
+    // disconnect previous observer
+    if (this.ro) {
+      this.ro.disconnect();
+    }
+
+    // create new observer
+    this.ro = new ResizeObserver(() => {
+      // debounce multiple calls (ResizeObserver can fire many times)
+      if (!this.running) {
+        this.running = true;
+        // run in zone so Angular updates bindings
+        this.zone.runOutsideAngular(() => {
+          requestAnimationFrame(() => {
+            this.zone.run(() => {
+              this.calculateLaneHeights();
+              this.running = false;
+            });
+          });
+        });
+      }
+    });
+
+    // observe each lane container (epicRow)
+    this.epicRows.forEach(row => {
+      try { this.ro!.observe(row.nativeElement); } catch (e) { /* ignore */ }
+    });
+  }
+
+  /**
+   * Compute laneHeights[] such that each lane is tall enough to contain
+   * stacked epic elements. For each epic element we compute offsetTop + offsetHeight,
+   * take the max (the bottom-most used pixel), add lanePad, and that becomes height.
+   */
+  calculateLaneHeights() {
+    if (!this.epicRows || this.epicRows.length === 0) {
+      // fallback — one default height per lane
+      this.laneHeights = this.swimlanes.map(_ => this.defaultLaneHeight);
+      return;
+    }
+
+    const newHeights: number[] = [];
+
+    // iterate lane-by-lane
+    this.epicRows.forEach((rowRef, laneIndex) => {
+      const rowEl = rowRef.nativeElement as HTMLElement;
+      // find epic boxes inside this row
+      const boxes = Array.from(rowEl.querySelectorAll<HTMLElement>('.epic-box'));
+
+      if (!boxes.length) {
+        newHeights[laneIndex] = Math.max(this.defaultLaneHeight, this.minLaneHeight);
+        return;
+      }
+
+      // compute the bottom-most pixel used by any epic in this row
+      let maxBottom = 0;
+      boxes.forEach(b => {
+        const top = b.offsetTop;          // offsetTop relative to rowEl
+        const bottom = top + b.offsetHeight;
+        if (bottom > maxBottom) maxBottom = bottom;
+      });
+
+      // final height = maxBottom + some padding
+      const finalHeight = Math.max(this.minLaneHeight, Math.ceil(maxBottom + this.lanePad));
+      newHeights[laneIndex] = finalHeight;
+    });
+
+    // if swimlanes > rows observed, fill remaining with default
+    for (let i = 0; i < this.swimlanes.length; i++) {
+      if (newHeights[i] == null) newHeights[i] = this.defaultLaneHeight;
+    }
+
+    this.laneHeights = newHeights;
+  }
+
+  /* --------------------------
+     Helper stubs you already have
+     -------------------------- */
+  // sample left/right positioning helpers; keep your existing ones
+  getLeftPercent(start: number): string {
+    const pct = (start / this.months.length) * 100;
+    return pct + '%';
+  }
+  getWidthPercent(start: number, end: number): string {
+    const pct = ((end - start + 1) / this.months.length) * 100;
+    return pct + '%';
+  }
+
+  // If you use row-index-based top (instead of DOM-calculated), keep epicTopPx(epic)
+  epicTopPx(epic: any): number {
+    // if you compute `epic.row`, then:
+    const row = epic.row ?? 0;
+    // compute with some rowGap if needed; example:
+    const rowGap = 8;
+    return /* top padding */ 8 + row * (/* variable epic height? */  (epic.offsetHeight || 32) + rowGap);
   }
 }
