@@ -1,0 +1,65 @@
+<div class="h-screen flex flex-col">
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- Sticky Swimlanes Column -->
+        <div class="w-48 sticky left-0 z-40 bg-gray-100 border-r flex flex-col">
+            <!-- Sticky Corner -->
+            <div class="h-16 border-b bg-white sticky top-0 z-50 flex items-center justify-center font-bold">
+                Swimlanes
+            </div>
+            <!-- Scrollable swimlanes (but linked to epics scroll) -->
+            <div #swimlaneScroll class="flex-1 overflow-hidden">
+                <div class="flex flex-col">
+                    <div *ngFor="let lane of swimlanes"
+                        class="flex items-center justify-center font-medium text-gray-700 border-b"
+                        [style.height]="getLaneHeight(lane)">
+                        {{ lane.name }}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Epics Section -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Sticky Months Header -->
+            <div class="grid grid-cols-12 h-16 border-b sticky top-0 bg-white z-40 pr-[18px]">
+                <div *ngFor="let month of months; let i = index"
+                    class="border-l flex items-center justify-center text-sm font-semibold text-gray-600 group relative">
+                    {{ month }}
+                    <!-- Hover highlight overlay -->
+                    <div class="absolute inset-0 bg-blue-100/40 opacity-0 group-hover:opacity-100 pointer-events-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Epics Scroll Area -->
+            <div #epicScroll class="flex-1 overflow-y-scroll">
+                <div class="min-w-max">
+
+                    <!-- RIGHT: lanes with month grid + epics -->
+                    <div *ngFor="let lane of swimlanes"
+                        class="grid grid-cols-12 border-b-2 border-dashed relative box-border"
+                        [style.height]="getLaneHeight(lane)">
+
+                        <div *ngFor="let month of months" class="border-l-2 border-dashed border-spacing-4 h-full group relative">
+                            <!-- Hover highlight overlay -->
+                            <div class="absolute inset-0 bg-blue-100/40 opacity-0 group-hover:opacity-100 pointer-events-none">
+                            </div>
+                        </div>
+                        <!-- Epic boxes -->
+                        <div *ngFor="let epic of lane.items"
+                            class="absolute flex items-center justify-center text-xs text-white rounded shadow select-none"
+                            [ngClass]="epic.color" [style.height.px]="epicHeight" [style.top.px]="epicTopPx(epic)"
+                            [ngStyle]="{
+                                left: getLeftPercent(epic.start),
+                                width: getWidthPercent(epic.start, epic.end)
+                            }">
+                            {{ epic.label }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
