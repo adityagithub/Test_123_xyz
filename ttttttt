@@ -3,70 +3,262 @@ import GenericAmChart from "./GenericAmChart";
 
 export default function App() {
   return (
-    <div className="p-4 space-y-6">
-      <h1 className="text-2xl font-bold">Dynamic amCharts 5 Demo</h1>
+    <div className="p-6 space-y-12">
+      <h1 className="text-3xl font-bold mb-6">amCharts 5 - Generic Component Demo</h1>
 
-      {/* Column */}
-      <GenericAmChart
-        chartType="ColumnChart"
-        data={[
-          { category: "A", value: 40 },
-          { category: "B", value: 55 },
-          { category: "C", value: 30 },
-        ]}
-      />
+      {/* 1. Line Chart: Website Traffic Over Time */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Line Chart - Website Traffic</h2>
+        <GenericAmChart
+          chartType="LineChart"
+          xField="month"
+          yField="visitors"
+          data={[
+            { month: "Jan", visitors: 1200 },
+            { month: "Feb", visitors: 1500 },
+            { month: "Mar", visitors: 1800 },
+            { month: "Apr", visitors: 1700 },
+            { month: "May", visitors: 2200 },
+          ]}
+        />
+      </section>
 
-      {/* Pie */}
-      <GenericAmChart
-        chartType="PieChart"
-        data={[
-          { category: "Apples", value: 10 },
-          { category: "Bananas", value: 20 },
-          { category: "Oranges", value: 15 },
-        ]}
-      />
+      {/* 2. Column Chart: Sales by Product */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Column Chart - Sales by Product</h2>
+        <GenericAmChart
+          chartType="ColumnChart"
+          data={[
+            { category: "Laptops", value: 320 },
+            { category: "Phones", value: 540 },
+            { category: "Tablets", value: 210 },
+            { category: "Monitors", value: 180 },
+          ]}
+        />
+      </section>
 
-      {/* Treemap */}
-      <GenericAmChart
-        chartType="Treemap"
-        data={[
-          {
-            category: "Fruits",
-            children: [
-              { category: "Apples", value: 6 },
-              { category: "Bananas", value: 8 },
-              { category: "Cherries", value: 4 },
-            ],
-          },
-          {
-            category: "Vegetables",
-            children: [
-              { category: "Carrots", value: 5 },
-              { category: "Potatoes", value: 7 },
-            ],
-          },
-        ]}
-      />
+      {/* 3. Bar Chart: Top Programming Languages */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Bar Chart - Programming Language Popularity</h2>
+        <GenericAmChart
+          chartType="BarChart"
+          data={[
+            { category: "JavaScript", value: 67 },
+            { category: "Python", value: 44 },
+            { category: "Java", value: 40 },
+            { category: "C#", value: 31 },
+            { category: "Go", value: 15 },
+          ]}
+        />
+      </section>
 
-      {/* Sankey */}
-      <GenericAmChart
-        chartType="Sankey"
-        data={[
-          { from: "A", to: "B", value: 10 },
-          { from: "A", to: "C", value: 8 },
-          { from: "B", to: "D", value: 4 },
-        ]}
-      />
+      {/* 4. Scatter Chart: Age vs Income */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Scatter Chart - Age vs Income</h2>
+        <GenericAmChart
+          chartType="ScatterChart"
+          data={[
+            { category: "25", value: 30000 },
+            { category: "30", value: 45000 },
+            { category: "35", value: 60000 },
+            { category: "40", value: 75000 },
+            { category: "45", value: 90000 },
+          ]}
+        />
+      </section>
 
-      {/* WordCloud */}
-      <GenericAmChart
-        chartType="WordCloud"
-        data={[
-          { category: "Trading", value: 20 },
-          { category: "Stocks", value: 15 },
-          { category: "Crypto", value: 10 },
-        ]}
-      />
+      {/* 5. Pie Chart: Market Share */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Pie Chart - Smartphone Market Share</h2>
+        <GenericAmChart
+          chartType="PieChart"
+          data={[
+            { category: "Apple", value: 35 },
+            { category: "Samsung", value: 30 },
+            { category: "Xiaomi", value: 15 },
+            { category: "Others", value: 20 },
+          ]}
+        />
+      </section>
+
+      {/* 6. Donut Chart: Budget Allocation */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Donut Chart - Budget Allocation</h2>
+        <GenericAmChart
+          chartType="DonutChart"
+          data={[
+            { category: "R&D", value: 25 },
+            { category: "Marketing", value: 35 },
+            { category: "Operations", value: 20 },
+            { category: "HR", value: 10 },
+            { category: "Other", value: 10 },
+          ]}
+        />
+      </section>
+
+      {/* 7. Radar Chart: Employee Skills */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Radar Chart - Employee Skills</h2>
+        <GenericAmChart
+          chartType="RadarChart"
+          data={[
+            { category: "Communication", value: 80 },
+            { category: "Leadership", value: 70 },
+            { category: "Technical", value: 90 },
+            { category: "Creativity", value: 65 },
+            { category: "Teamwork", value: 85 },
+          ]}
+        />
+      </section>
+
+      {/* 8. Treemap: Company Departments */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Treemap - Company Departments</h2>
+        <GenericAmChart
+          chartType="Treemap"
+          data={[
+            {
+              category: "Technology",
+              children: [
+                { category: "Backend", value: 15 },
+                { category: "Frontend", value: 12 },
+                { category: "DevOps", value: 8 },
+              ],
+            },
+            {
+              category: "Business",
+              children: [
+                { category: "Sales", value: 20 },
+                { category: "Marketing", value: 18 },
+              ],
+            },
+            {
+              category: "Support",
+              children: [
+                { category: "Customer Success", value: 10 },
+                { category: "Technical Support", value: 7 },
+              ],
+            },
+          ]}
+        />
+      </section>
+
+      {/* 9. Sunburst: World Population */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Sunburst - World Population</h2>
+        <GenericAmChart
+          chartType="Sunburst"
+          data={[
+            {
+              category: "World",
+              children: [
+                {
+                  category: "Asia",
+                  children: [
+                    { category: "China", value: 1400 },
+                    { category: "India", value: 1380 },
+                  ],
+                },
+                {
+                  category: "Europe",
+                  children: [
+                    { category: "Germany", value: 83 },
+                    { category: "France", value: 67 },
+                  ],
+                },
+                {
+                  category: "Americas",
+                  children: [
+                    { category: "USA", value: 331 },
+                    { category: "Brazil", value: 213 },
+                  ],
+                },
+              ],
+            },
+          ]}
+        />
+      </section>
+
+      {/* 10. Sankey: Energy Flow */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Sankey - Energy Flow</h2>
+        <GenericAmChart
+          chartType="Sankey"
+          data={[
+            { from: "Coal", to: "Electricity", value: 50 },
+            { from: "Solar", to: "Electricity", value: 30 },
+            { from: "Wind", to: "Electricity", value: 20 },
+            { from: "Electricity", to: "Industry", value: 40 },
+            { from: "Electricity", to: "Transport", value: 30 },
+            { from: "Electricity", to: "Households", value: 30 },
+          ]}
+        />
+      </section>
+
+      {/* 11. Chord: Flight Connections */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Chord Diagram - Flight Connections</h2>
+        <GenericAmChart
+          chartType="Chord"
+          data={[
+            { from: "New York", to: "London", value: 15 },
+            { from: "London", to: "Paris", value: 10 },
+            { from: "Paris", to: "Berlin", value: 7 },
+            { from: "Berlin", to: "New York", value: 5 },
+          ]}
+        />
+      </section>
+
+      {/* 12. Force Directed: Tech Ecosystem */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Force Directed - Tech Ecosystem</h2>
+        <GenericAmChart
+          chartType="ForceDirected"
+          data={[
+            {
+              category: "Frontend",
+              children: [
+                { category: "React", value: 80 },
+                { category: "Angular", value: 60 },
+                { category: "Vue", value: 50 },
+              ],
+            },
+            {
+              category: "Backend",
+              children: [
+                { category: "Node.js", value: 70 },
+                { category: "Java", value: 60 },
+                { category: "Python", value: 65 },
+              ],
+            },
+          ]}
+        />
+      </section>
+
+      {/* 13. WordCloud: Trading Keywords */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">WordCloud - Trading Keywords</h2>
+        <GenericAmChart
+          chartType="WordCloud"
+          data={[
+            { category: "Gold", value: 30 },
+            { category: "Forex", value: 20 },
+            { category: "Stocks", value: 25 },
+            { category: "Crypto", value: 15 },
+            { category: "Bonds", value: 10 },
+            { category: "Oil", value: 18 },
+          ]}
+        />
+      </section>
+
+      {/* 14. Gauge: Server CPU Usage */}
+      <section>
+        <h2 className="text-xl font-semibold mb-2">Gauge Chart - Server CPU Usage</h2>
+        <GenericAmChart
+          chartType="GaugeChart"
+          data={[{ category: "CPU", value: 72 }]}
+        />
+      </section>
     </div>
   );
 }
