@@ -1,157 +1,376 @@
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  OnDestroy,
-  QueryList,
-  ViewChildren,
-  NgZone
-} from '@angular/core';
-
-@Component({
-  selector: 'app-timeline',
-  templateUrl: './timeline.component.html',
-})
-export class TimelineComponent implements AfterViewInit, OnDestroy {
-  months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  swimlanes: any[] = [ /* your data */ ];
-
-  // paddings / fallbacks
-  lanePad = 8;                // bottom padding we add for breathing room
-  defaultLaneHeight = 80;     // min height fallback
-  minLaneHeight = 48;         // safety minimum
-
-  laneHeights: number[] = [];
-
-  @ViewChildren('epicRow', { read: ElementRef }) epicRows!: QueryList<ElementRef>;
-
-  private ro?: ResizeObserver;
-  private running = false;
-
-  constructor(private zone: NgZone) {}
-
-  ngAfterViewInit(): void {
-    // initial calculate (defer to next macrotask so DOM is painted)
-    setTimeout(() => this.calculateLaneHeights());
-
-    // if rows change (e.g. data changes), recalc
-    this.epicRows.changes.subscribe(() => {
-      setTimeout(() => {
-        this.attachResizeObserver(); // attach observers to new nodes
-        this.calculateLaneHeights();
-      }, 0);
-    });
-
-    // attach observers initially
-    this.attachResizeObserver();
-
-    // window resize -> recompute
-    window.addEventListener('resize', this.onWindowResize);
-  }
-
-  ngOnDestroy(): void {
-    window.removeEventListener('resize', this.onWindowResize);
-    if (this.ro) this.ro.disconnect();
-  }
-
-  private onWindowResize = () => {
-    this.calculateLaneHeights();
-  };
-
-  private attachResizeObserver() {
-    // disconnect previous observer
-    if (this.ro) {
-      this.ro.disconnect();
-    }
-
-    // create new observer
-    this.ro = new ResizeObserver(() => {
-      // debounce multiple calls (ResizeObserver can fire many times)
-      if (!this.running) {
-        this.running = true;
-        // run in zone so Angular updates bindings
-        this.zone.runOutsideAngular(() => {
-          requestAnimationFrame(() => {
-            this.zone.run(() => {
-              this.calculateLaneHeights();
-              this.running = false;
-            });
-          });
-        });
-      }
-    });
-
-    // observe each lane container (epicRow)
-    this.epicRows.forEach(row => {
-      try { this.ro!.observe(row.nativeElement); } catch (e) { /* ignore */ }
-    });
-  }
-
-  /**
-   * Compute laneHeights[] such that each lane is tall enough to contain
-   * stacked epic elements. For each epic element we compute offsetTop + offsetHeight,
-   * take the max (the bottom-most used pixel), add lanePad, and that becomes height.
-   */
-  calculateLaneHeights() {
-    if (!this.epicRows || this.epicRows.length === 0) {
-      // fallback — one default height per lane
-      this.laneHeights = this.swimlanes.map(_ => this.defaultLaneHeight);
-      return;
-    }
-
-    const newHeights: number[] = [];
-
-    // iterate lane-by-lane
-    this.epicRows.forEach((rowRef, laneIndex) => {
-      const rowEl = rowRef.nativeElement as HTMLElement;
-      // find epic boxes inside this row
-      const boxes = Array.from(rowEl.querySelectorAll<HTMLElement>('.epic-box'));
-
-      if (!boxes.length) {
-        newHeights[laneIndex] = Math.max(this.defaultLaneHeight, this.minLaneHeight);
-        return;
-      }
-
-      // compute the bottom-most pixel used by any epic in this row
-      let maxBottom = 0;
-      boxes.forEach(b => {
-        const top = b.offsetTop;          // offsetTop relative to rowEl
-        const bottom = top + b.offsetHeight;
-        if (bottom > maxBottom) maxBottom = bottom;
-      });
-
-      // final height = maxBottom + some padding
-      const finalHeight = Math.max(this.minLaneHeight, Math.ceil(maxBottom + this.lanePad));
-      newHeights[laneIndex] = finalHeight;
-    });
-
-    // if swimlanes > rows observed, fill remaining with default
-    for (let i = 0; i < this.swimlanes.length; i++) {
-      if (newHeights[i] == null) newHeights[i] = this.defaultLaneHeight;
-    }
-
-    this.laneHeights = newHeights;
-  }
-
-  /* --------------------------
-     Helper stubs you already have
-     -------------------------- */
-  // sample left/right positioning helpers; keep your existing ones
-  getLeftPercent(start: number): string {
-    const pct = (start / this.months.length) * 100;
-    return pct + '%';
-  }
-  getWidthPercent(start: number, end: number): string {
-    const pct = ((end - start + 1) / this.months.length) * 100;
-    return pct + '%';
-  }
-
-  // If you use row-index-based top (instead of DOM-calculated), keep epicTopPx(epic)
-  epicTopPx(epic: any): number {
-    // if you compute `epic.row`, then:
-    const row = epic.row ?? 0;
-    // compute with some rowGap if needed; example:
-    const rowGap = 8;
-    return /* top padding */ 8 + row * (/* variable epic height? */  (epic.offsetHeight || 32) + rowGap);
-  }
+export enum AmChartTypeEnum {
+  XYChart = "XYChart",
+  XYChart3D = "XYChart3D",
+  LineChart = "LineChart",
+  SmoothedXLineChart = "SmoothedXLineChart",
+  StepLineChart = "StepLineChart",
+  AreaChart = "AreaChart",
+  ColumnChart = "ColumnChart",
+  StackedColumnChart = "StackedColumnChart",
+  ClusteredColumnChart = "ClusteredColumnChart",
+  ColumnChart3D = "ColumnChart3D",
+  BarChart = "BarChart",
+  StackedBarChart = "StackedBarChart",
+  ClusteredBarChart = "ClusteredBarChart",
+  PieChart = "PieChart",
+  PieChart3D = "PieChart3D",
+  DonutChart = "DonutChart",
+  FunnelChart = "FunnelChart",
+  PyramidChart = "PyramidChart",
+  RadarChart = "RadarChart",
+  PolarChart = "PolarChart",
+  ScatterChart = "ScatterChart",
+  BubbleChart = "BubbleChart",
+  MapChart = "MapChart",
+  MapChart3D = "MapChart3D",
+  StockChart = "StockChart",
+  CandlestickChart = "CandlestickChart",
+  OHLCChart = "OHLCChart",
+  KagiChart = "KagiChart",
+  RenkoChart = "RenkoChart",
+  PointAndFigureChart = "PointAndFigureChart",
+  TreeMap = "TreeMap",
+  Sunburst = "Sunburst",
+  SankeyDiagram = "SankeyDiagram",
+  ChordDiagram = "ChordDiagram",
+  ForceDirectedTree = "ForceDirectedTree",
+  GaugeChart = "GaugeChart",
+  RadarGauge = "RadarGauge",
+  ClockChart = "ClockChart",
+  WordCloud = "WordCloud",
+  Timeline = "Timeline",
+  FlowDiagram = "FlowDiagram",
 }
+
+
+
+
+
+import React, { useLayoutEffect, useRef } from "react";
+import * as am5 from "@amcharts/amcharts5";
+import * as am5xy from "@amcharts/amcharts5/xy";
+import * as am5percent from "@amcharts/amcharts5/percent";
+import * as am5radar from "@amcharts/amcharts5/radar";
+import * as am5hierarchy from "@amcharts/amcharts5/hierarchy";
+import * as am5flow from "@amcharts/amcharts5/flow";
+import * as am5wc from "@amcharts/amcharts5/wc";
+import * as am5map from "@amcharts/amcharts5/map"; // for future maps
+import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
+
+export type AmChartType =
+  | "XYChart"
+  | "LineChart"
+  | "ColumnChart"
+  | "BarChart"
+  | "ScatterChart"
+  | "PieChart"
+  | "DonutChart"
+  | "RadarChart"
+  | "Treemap"
+  | "Sunburst"
+  | "Sankey"
+  | "Chord"
+  | "ForceDirected"
+  | "WordCloud"
+  | "GaugeChart";
+
+interface GenericChartProps {
+  chartType: AmChartType;
+  data: any[];
+  xField?: string;
+  yField?: string;
+  valueField?: string;
+  categoryField?: string;
+  fromField?: string; // for Sankey/Chord
+  toField?: string;   // for Sankey/Chord
+  style?: React.CSSProperties;
+}
+
+const GenericAmChart: React.FC<GenericChartProps> = ({
+  chartType,
+  data,
+  xField = "category",
+  yField = "value",
+  valueField = "value",
+  categoryField = "category",
+  fromField = "from",
+  toField = "to",
+  style = { width: "100%", height: "500px" },
+}) => {
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!chartRef.current) return;
+
+    let root = am5.Root.new(chartRef.current);
+    root.setThemes([am5themes_Animated.new(root)]);
+
+    let chart: any;
+
+    switch (chartType) {
+      /**
+       * XY / Cartesian (Line, Column, Bar, Scatter)
+       */
+      case "XYChart":
+      case "LineChart":
+      case "ColumnChart":
+      case "BarChart":
+      case "ScatterChart": {
+        chart = root.container.children.push(
+          am5xy.XYChart.new(root, {
+            layout: root.verticalLayout,
+          })
+        );
+
+        let xAxis = chart.xAxes.push(
+          am5xy.CategoryAxis.new(root, {
+            categoryField: xField,
+            renderer: am5xy.AxisRendererX.new(root, {}),
+          })
+        );
+        xAxis.data.setAll(data);
+
+        let yAxis = chart.yAxes.push(
+          am5xy.ValueAxis.new(root, {
+            renderer: am5xy.AxisRendererY.new(root, {}),
+          })
+        );
+
+        if (chartType === "LineChart") {
+          let series = chart.series.push(
+            am5xy.LineSeries.new(root, {
+              xAxis,
+              yAxis,
+              valueYField: yField,
+              categoryXField: xField,
+            })
+          );
+          series.data.setAll(data);
+        } else if (chartType === "ColumnChart" || chartType === "BarChart") {
+          let series = chart.series.push(
+            am5xy.ColumnSeries.new(root, {
+              xAxis,
+              yAxis,
+              valueYField: yField,
+              categoryXField: xField,
+            })
+          );
+          series.data.setAll(data);
+        } else if (chartType === "ScatterChart") {
+          let series = chart.series.push(
+            am5xy.LineSeries.new(root, {
+              xAxis,
+              yAxis,
+              valueYField: yField,
+              categoryXField: xField,
+              tooltip: am5.Tooltip.new(root, { labelText: "{valueY}" }),
+            })
+          );
+          series.strokes.template.set("visible", false);
+          series.bullets.push(() =>
+            am5.Bullet.new(root, {
+              sprite: am5.Circle.new(root, { radius: 5 }),
+            })
+          );
+          series.data.setAll(data);
+        }
+        break;
+      }
+
+      /**
+       * Pie / Donut
+       */
+      case "PieChart":
+      case "DonutChart": {
+        chart = root.container.children.push(
+          am5percent.PieChart.new(root, {
+            innerRadius: chartType === "DonutChart" ? am5.percent(50) : 0,
+          })
+        );
+
+        let series = chart.series.push(
+          am5percent.PieSeries.new(root, {
+            valueField,
+            categoryField,
+          })
+        );
+        series.data.setAll(data);
+        break;
+      }
+
+      /**
+       * Radar
+       */
+      case "RadarChart": {
+        chart = root.container.children.push(
+          am5radar.RadarChart.new(root, {
+            startAngle: -90,
+            endAngle: 180,
+          })
+        );
+
+        let xAxis = chart.xAxes.push(
+          am5radar.CategoryAxis.new(root, {
+            categoryField: xField,
+            renderer: am5radar.AxisRendererCircular.new(root, {}),
+          })
+        );
+        xAxis.data.setAll(data);
+
+        let yAxis = chart.yAxes.push(
+          am5radar.ValueAxis.new(root, {
+            renderer: am5radar.AxisRendererRadial.new(root, {}),
+          })
+        );
+
+        let series = chart.series.push(
+          am5radar.RadarLineSeries.new(root, {
+            xAxis,
+            yAxis,
+            valueYField: yField,
+            categoryXField: xField,
+          })
+        );
+        series.data.setAll(data);
+        break;
+      }
+
+      /**
+       * Treemap
+       */
+      case "Treemap": {
+        chart = root.container.children.push(
+          am5hierarchy.Treemap.new(root, {
+            singleBranchOnly: false,
+            downDepth: 1,
+            initialDepth: 2,
+            valueField,
+            categoryField,
+            childDataField: "children",
+          })
+        );
+        chart.data.setAll(data);
+        break;
+      }
+
+      /**
+       * Sunburst
+       */
+      case "Sunburst": {
+        chart = root.container.children.push(
+          am5hierarchy.Sunburst.new(root, {
+            valueField,
+            categoryField,
+            childDataField: "children",
+          })
+        );
+        chart.data.setAll(data);
+        break;
+      }
+
+      /**
+       * Sankey
+       */
+      case "Sankey": {
+        chart = root.container.children.push(
+          am5flow.Sankey.new(root, {
+            sourceIdField: fromField,
+            targetIdField: toField,
+            valueField,
+          })
+        );
+        chart.data.setAll(data);
+        break;
+      }
+
+      /**
+       * Chord
+       */
+      case "Chord": {
+        chart = root.container.children.push(
+          am5flow.ChordDiagram.new(root, {
+            sourceIdField: fromField,
+            targetIdField: toField,
+            valueField,
+          })
+        );
+        chart.data.setAll(data);
+        break;
+      }
+
+      /**
+       * ForceDirected
+       */
+      case "ForceDirected": {
+        chart = root.container.children.push(
+          am5hierarchy.ForceDirected.new(root, {
+            valueField,
+            categoryField,
+            childDataField: "children",
+            manyBodyStrength: -20,
+          })
+        );
+        chart.data.setAll(data);
+        break;
+      }
+
+      /**
+       * WordCloud
+       */
+      case "WordCloud": {
+        chart = root.container.children.push(
+          am5wc.WordCloud.new(root, {
+            textField: categoryField,
+            valueField,
+          })
+        );
+        chart.data.setAll(data);
+        break;
+      }
+
+      /**
+       * Gauge
+       */
+      case "GaugeChart": {
+        chart = root.container.children.push(
+          am5radar.RadarChart.new(root, {
+            startAngle: 180,
+            endAngle: 360,
+            innerRadius: am5.percent(50),
+          })
+        );
+
+        let axis = chart.xAxes.push(
+          am5xy.ValueAxis.new(root, {
+            min: 0,
+            max: 100,
+            strictMinMax: true,
+            renderer: am5radar.AxisRendererCircular.new(root, {}),
+          })
+        );
+
+        let series = chart.series.push(
+          am5radar.RadarLineSeries.new(root, {
+            valueYField: yField,
+            valueXField: xField,
+          })
+        );
+        series.data.setAll(data);
+
+        break;
+      }
+
+      default:
+        console.warn(`Chart type "${chartType}" not supported yet`);
+        break;
+    }
+
+    return () => {
+      root.dispose();
+    };
+  }, [chartType, data, xField, yField, valueField, categoryField, fromField, toField]);
+
+  return <div ref={chartRef} style={style} />;
+};
+
+export default GenericAmChart;
