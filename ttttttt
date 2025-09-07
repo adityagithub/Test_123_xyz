@@ -1,72 +1,36 @@
-import React, { useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import React from "react";
+import { Scrollbar } from "react-scrollbars-custom";
 
-interface CardSliderProps {
-  items: { id: number; title: string; description: string }[];
-}
-
-const CardSlider: React.FC<CardSliderProps> = ({ items }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
-
-  const checkScroll = () => {
-    if (!containerRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = containerRef.current;
-    setCanScrollLeft(scrollLeft > 0);
-    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
-  };
-
-  const scroll = (direction: "left" | "right") => {
-    if (!containerRef.current) return;
-    const { clientWidth } = containerRef.current;
-    const scrollAmount = direction === "left" ? -clientWidth : clientWidth;
-    containerRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    setTimeout(checkScroll, 400); // delay to allow smooth scroll finish
-  };
-
+const FixedLayout: React.FC = () => {
   return (
-    <div className="emf-relative emf-w-full emf-max-w-4xl emf-mx-auto">
-      {/* Left Button */}
-      <button
-        onClick={() => scroll("left")}
-        disabled={!canScrollLeft}
-        className={`emf-absolute emf-left-0 emf-top-1/2 -emf-translate-y-1/2 emf-z-10 emf-bg-white emf-p-2 emf-rounded-full emf-shadow ${
-          canScrollLeft ? "emf-opacity-100" : "emf-opacity-50 emf-cursor-not-allowed"
-        }`}
-      >
-        <ChevronLeft />
-      </button>
-
-      {/* Scrollable Container */}
-      <div
-        ref={containerRef}
-        onScroll={checkScroll}
-        className="emf-flex emf-overflow-x-auto emf-space-x-4 emf-scroll-smooth scrollbar-hide emf-px-10"
-      >
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="emf-min-w-[250px] emf-flex-shrink-0 emf-bg-white emf-shadow emf-rounded-2xl emf-p-4"
-          >
-            <h3 className="emf-font-bold emf-text-lg">{item.title}</h3>
-            <p className="emf-text-gray-600">{item.description}</p>
-          </div>
-        ))}
+    <div className="w-full h-[500px] flex flex-col border rounded-lg shadow-md overflow-hidden">
+      {/* Header */}
+      <div className="flex-none bg-blue-600 text-white p-4 text-lg font-semibold">
+        Fixed Header
       </div>
 
-      {/* Right Button */}
-      <button
-        onClick={() => scroll("right")}
-        disabled={!canScrollRight}
-        className={`emf-absolute emf-right-0 emf-top-1/2 -emf-translate-y-1/2 emf-z-10 emf-bg-white emf-p-2 emf-rounded-full emf-shadow ${
-          canScrollRight ? "emf-opacity-100" : "emf-opacity-50 emf-cursor-not-allowed"
-        }`}
-      >
-        <ChevronRight />
-      </button>
+      {/* Scrollable Content */}
+      <div className="flex-1">
+        <Scrollbar style={{ width: "100%", height: "100%" }}>
+          <div className="p-4 space-y-4">
+            {Array.from({ length: 30 }).map((_, i) => (
+              <div
+                key={i}
+                className="p-3 bg-gray-100 border rounded-md shadow-sm"
+              >
+                Item {i + 1}
+              </div>
+            ))}
+          </div>
+        </Scrollbar>
+      </div>
+
+      {/* Footer */}
+      <div className="flex-none bg-gray-800 text-white p-4 text-sm">
+        Fixed Footer
+      </div>
     </div>
   );
 };
 
-export default CardSlider;
+export default FixedLayout;
